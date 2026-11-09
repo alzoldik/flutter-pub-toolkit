@@ -3,7 +3,7 @@
   "displayName": "Flutter Pub Toolkit",
   "description": "Productivity tools for Flutter & Dart: outdated-package checks in pubspec.yaml, one-click updates, pub.dev autocomplete, build_runner commands and handy snippets.",
   "version": "0.1.0",
-  "publisher": "YOUR_PUBLISHER_ID",
+  "publisher": "alzoldik",
   "author": { "name": "alzoldik" },
   "license": "MIT",
   "icon": "images/icon.png",
