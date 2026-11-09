@@ -1,0 +1,117 @@
+{
+  "Freezed data class": {
+    "prefix": "frz",
+    "description": "Freezed immutable class with JSON support",
+    "body": [
+      "import 'package:freezed_annotation/freezed_annotation.dart';",
+      "",
+      "part '${TM_FILENAME_BASE}.freezed.dart';",
+      "part '${TM_FILENAME_BASE}.g.dart';",
+      "",
+      "@freezed",
+      "class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} with _$${1} {",
+      "  const factory ${1}({",
+      "    required ${2:String} ${3:id},$0",
+      "  }) = _${1};",
+      "",
+      "  factory ${1}.fromJson(Map<String, dynamic> json) => _$${1}FromJson(json);",
+      "}"
+    ]
+  },
+  "Freezed union / sealed state": {
+    "prefix": "frzu",
+    "description": "Freezed sealed union (e.g. for states)",
+    "body": [
+      "@freezed",
+      "sealed class ${1:Name}State with _$${1}State {",
+      "  const factory ${1}State.initial() = _Initial;",
+      "  const factory ${1}State.loading() = _Loading;",
+      "  const factory ${1}State.success(${2:Object} data) = _Success;",
+      "  const factory ${1}State.failure(String message) = _Failure;",
+      "}"
+    ]
+  },
+  "json_serializable class": {
+    "prefix": "jsonc",
+    "description": "Class annotated with @JsonSerializable",
+    "body": [
+      "import 'package:json_annotation/json_annotation.dart';",
+      "",
+      "part '${TM_FILENAME_BASE}.g.dart';",
+      "",
+      "@JsonSerializable()",
+      "class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} {",
+      "  const ${1}({required this.${3:id}});",
+      "",
+      "  final ${2:String} ${3};$0",
+      "",
+      "  factory ${1}.fromJson(Map<String, dynamic> json) => _$${1}FromJson(json);",
+      "  Map<String, dynamic> toJson() => _$${1}ToJson(this);",
+      "}"
+    ]
+  },
+  "part .g.dart": {
+    "prefix": "partg",
+    "description": "part directive for generated .g.dart file",
+    "body": ["part '${TM_FILENAME_BASE}.g.dart';"]
+  },
+  "part .freezed.dart": {
+    "prefix": "partf",
+    "description": "part directive for generated .freezed.dart file",
+    "body": ["part '${TM_FILENAME_BASE}.freezed.dart';"]
+  },
+  "Cubit": {
+    "prefix": "cubit",
+    "description": "flutter_bloc Cubit",
+    "body": [
+      "class ${1:Name}Cubit extends Cubit<${2:${1}State}> {",
+      "  ${1}Cubit() : super(${3:const ${2}()});",
+      "",
+      "  $0",
+      "}"
+    ]
+  },
+  "StatelessWidget with key": {
+    "prefix": "stlk",
+    "description": "StatelessWidget with super.key constructor",
+    "body": [
+      "class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} extends StatelessWidget {",
+      "  const ${1}({super.key});",
+      "",
+      "  @override",
+      "  Widget build(BuildContext context) {",
+      "    return ${0:const Placeholder()};",
+      "  }",
+      "}"
+    ]
+  },
+  "StatefulWidget with lifecycle": {
+    "prefix": "stfl",
+    "description": "StatefulWidget with initState and dispose",
+    "body": [
+      "class ${1:${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}} extends StatefulWidget {",
+      "  const ${1}({super.key});",
+      "",
+      "  @override",
+      "  State<${1}> createState() => _${1}State();",
+      "}",
+      "",
+      "class _${1}State extends State<${1}> {",
+      "  @override",
+      "  void initState() {",
+      "    super.initState();",
+      "  }",
+      "",
+      "  @override",
+      "  void dispose() {",
+      "    super.dispose();",
+      "  }",
+      "",
+      "  @override",
+      "  Widget build(BuildContext context) {",
+      "    return ${0:const Placeholder()};",
+      "  }",
+      "}"
+    ]
+  }
+}

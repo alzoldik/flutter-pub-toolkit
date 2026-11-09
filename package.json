@@ -1,0 +1,91 @@
+{
+  "name": "flutter-pub-toolkit",
+  "displayName": "Flutter Pub Toolkit",
+  "description": "Productivity tools for Flutter & Dart: outdated-package checks in pubspec.yaml, one-click updates, pub.dev autocomplete, build_runner commands and handy snippets.",
+  "version": "0.1.0",
+  "publisher": "YOUR_PUBLISHER_ID",
+  "author": { "name": "alzoldik" },
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_GITHUB/flutter-pub-toolkit"
+  },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Snippets", "Linters", "Other"],
+  "keywords": ["flutter", "dart", "pubspec", "pub.dev", "build_runner", "dependencies"],
+  "activationEvents": [
+    "workspaceContains:**/pubspec.yaml",
+    "onLanguage:dart"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "flutterPubToolkit.checkUpdates", "title": "Check for Package Updates", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.updateAll", "title": "Update All Dependencies to Latest", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.pubGet", "title": "Pub Get", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.pubUpgrade", "title": "Pub Upgrade", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.buildRunnerBuild", "title": "build_runner: Build", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.buildRunnerWatch", "title": "build_runner: Watch", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.buildRunnerClean", "title": "build_runner: Clean", "category": "Flutter Pub Toolkit" },
+      { "command": "flutterPubToolkit.flutterClean", "title": "Flutter Clean + Pub Get", "category": "Flutter Pub Toolkit" }
+    ],
+    "menus": {
+      "editor/title": [
+        { "command": "flutterPubToolkit.checkUpdates", "when": "resourceFilename == pubspec.yaml", "group": "navigation" }
+      ],
+      "explorer/context": [
+        { "command": "flutterPubToolkit.pubGet", "when": "resourceFilename == pubspec.yaml", "group": "flutterPubToolkit@1" },
+        { "command": "flutterPubToolkit.buildRunnerBuild", "when": "resourceFilename == pubspec.yaml", "group": "flutterPubToolkit@2" }
+      ]
+    },
+    "configuration": {
+      "title": "Flutter Pub Toolkit",
+      "properties": {
+        "flutterPubToolkit.checkOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check pub.dev for newer versions when a pubspec.yaml is opened or saved."
+        },
+        "flutterPubToolkit.includePrerelease": {
+          "type": "boolean",
+          "default": false,
+          "description": "Suggest prerelease versions (e.g. 2.0.0-dev.1)."
+        },
+        "flutterPubToolkit.severity": {
+          "type": "string",
+          "enum": ["error", "warning", "information", "hint"],
+          "default": "warning",
+          "description": "Severity used to mark outdated dependencies."
+        },
+        "flutterPubToolkit.ignoredPackages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Package names that should never be flagged as outdated."
+        },
+        "flutterPubToolkit.useFvm": {
+          "type": "boolean",
+          "default": false,
+          "description": "Prefix flutter/dart commands with 'fvm'."
+        }
+      }
+    },
+    "snippets": [
+      { "language": "dart", "path": "./snippets/dart.json" }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.4.0"
+  }
+}
