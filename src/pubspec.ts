@@ -108,3 +108,90 @@ export function parseDependencies(doc: vscode.TextDocument): Dependency[] {
 export function isPubspec(doc: vscode.TextDocument): boolean {
   return doc.uri.path.endsWith('/pubspec.yaml');
 }
+
+function indentOf(text: string): number {
+  return text.length - text.trimStart().length;
+}
+
+/** Full line range (inclusive start, exclusive end) of the dependency entry that starts at `line`. */
+export function entryLineRange(doc: vscode.TextDocument, line: number): vscode.Range {
+  const indent = indentOf(doc.lineAt(line).text);
+  let end = line + 1;
+  while (end < doc.lineCount) {
+    const t = doc.lineAt(end).text;
+    if (t.trim() && indentOf(t) <= indent) { break; }
+    end++;
+  }
+  // don't swallow trailing blank lines
+  while (end - 1 > line && !doc.lineAt(end - 1).text.trim()) { end--; }
+  return new vscode.Range(line, 0, end, 0);
+}
+
+/** Returns edits that sort every dependency section alphabetically (sdk deps stay on top). */
+export function sortEdits(doc: vscode.TextDocument): vscode.TextEdit[] {
+  const edits: vscode.TextEdit[] = [];
+  for (let i = 0; i < doc.lineCount; i++) {
+    const top = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*:/.exec(doc.lineAt(i).text);
+    if (!top || !DEPENDENCY_SECTIONS.includes(top[1])) { continue; }
+
+    // collect body lines until the next top-level key
+    let end = i + 1;
+    while (end < doc.lineCount) {
+      const t = doc.lineAt(end).text;
+      if (t.trim() && !t.startsWith(' ') && !t.startsWith('\t') && !t.startsWith('#')) { break; }
+      end++;
+    }
+    while (end - 1 > i && !doc.lineAt(end - 1).text.trim()) { end--; }
+
+    interface Entry { name: string; sdk: boolean; lines: string[] }
+    const entries: Entry[] = [];
+    let pending: string[] = [];
+    let depIndent: number | undefined;
+    let firstLine: number | undefined;
+    for (let j = i + 1; j < end; j++) {
+      const t = doc.lineAt(j).text;
+      const trimmed = t.trim();
+      if (!trimmed) { continue; }
+      if (trimmed.startsWith('#') && (depIndent === undefined || indentOf(t) <= depIndent)) {
+        firstLine ??= j;
+        pending.push(t);
+        continue;
+      }
+      depIndent ??= indentOf(t);
+      const key = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/.exec(t);
+      if (indentOf(t) === depIndent && key) {
+        firstLine ??= j;
+        entries.push({ name: key[1], sdk: false, lines: [...pending, t] });
+        pending = [];
+      } else if (entries.length) {
+        const e = entries[entries.length - 1];
+        e.lines.push(t);
+        if (/^\s+sdk\s*:/.test(t)) { e.sdk = true; }
+      }
+    }
+    if (entries.length < 2 || firstLine === undefined) { continue; }
+    const trailing = pending; // comments after the last entry stay at the end
+
+    const sorted = [...entries].sort((a, b) => {
+      if (a.sdk !== b.sdk) { return a.sdk ? -1 : 1; }
+      return a.sdk ? 0 : a.name.localeCompare(b.name);
+    });
+    const newText = [...sorted.flatMap((e) => e.lines), ...trailing].join('\n') + '\n';
+    const range = new vscode.Range(firstLine, 0, end, 0);
+    if (doc.getText(range) !== newText) {
+      edits.push(vscode.TextEdit.replace(range, newText));
+    }
+    i = end - 1;
+  }
+  return edits;
+}
+
+/** Top-level keys of the pubspec (packages like flutter_native_splash are configured this way). */
+export function topLevelKeys(doc: vscode.TextDocument): Set<string> {
+  const keys = new Set<string>();
+  for (let i = 0; i < doc.lineCount; i++) {
+    const m = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*:/.exec(doc.lineAt(i).text);
+    if (m) { keys.add(m[1]); }
+  }
+  return keys;
+}

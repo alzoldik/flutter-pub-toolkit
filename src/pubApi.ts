@@ -1,4 +1,4 @@
-import { compareVersions, parseVersion } from './semver';
+import { compareVersions, parseVersion, Version } from './semver';
 
 export interface PackageInfo {
   name: string;
@@ -8,6 +8,8 @@ export interface PackageInfo {
   homepage?: string;
   repository?: string;
   discontinued?: boolean;
+  /** All published versions, ascending. */
+  versions: Version[];
 }
 
 const BASE = 'https://pub.dev/api';
@@ -49,6 +51,7 @@ async function fetchPackage(name: string): Promise<PackageInfo | undefined> {
     homepage: latestPubspec.homepage,
     repository: latestPubspec.repository,
     discontinued: data.isDiscontinued === true,
+    versions: parsed,
   };
 }
 

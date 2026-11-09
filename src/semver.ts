@@ -70,3 +70,20 @@ export function bumpConstraint(constraint: string, latest: string): string {
   // Ranges like ">=1.0.0 <2.0.0" are replaced by a caret constraint.
   return `${quote}^${latest}${quote}`;
 }
+
+/** True when moving from `from` to `to` crosses a caret boundary (breaking change by Dart's rules). */
+export function isBreaking(from: Version, to: Version): boolean {
+  if (to.major !== from.major) { return true; }
+  return from.major === 0 && to.minor !== from.minor;
+}
+
+/** Highest version newer than `current` that does NOT cross a caret boundary. */
+export function latestCompatible(versions: Version[], current: Version, includePre: boolean): Version | undefined {
+  let best: Version | undefined;
+  for (const v of versions) {
+    if (!includePre && v.pre.length) { continue; }
+    if (compareVersions(v, current) <= 0 || isBreaking(current, v)) { continue; }
+    if (!best || compareVersions(v, best) > 0) { best = v; }
+  }
+  return best;
+}

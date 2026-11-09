@@ -1,19 +1,37 @@
 {
   "name": "flutter-pub-toolkit",
   "displayName": "Flutter Pub Toolkit",
-  "description": "Productivity tools for Flutter & Dart: outdated-package checks in pubspec.yaml, one-click updates, pub.dev autocomplete, build_runner commands and handy snippets.",
-  "version": "0.1.0",
+  "description": "Productivity tools for Flutter & Dart: outdated & unused package detection in pubspec.yaml, safe one-click updates, pub.dev autocomplete, assets class generator, build_runner commands and snippets.",
+  "version": "0.2.0",
   "publisher": "alzoldik",
-  "author": { "name": "alzoldik" },
+  "author": {
+    "name": "alzoldik"
+  },
   "license": "MIT",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/YOUR_GITHUB/flutter-pub-toolkit"
   },
-  "engines": { "vscode": "^1.85.0" },
-  "categories": ["Programming Languages", "Snippets", "Linters", "Other"],
-  "keywords": ["flutter", "dart", "pubspec", "pub.dev", "build_runner", "dependencies"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "flutter",
+    "dart",
+    "pubspec",
+    "pub.dev",
+    "build_runner",
+    "dependencies",
+    "assets",
+    "unused dependencies"
+  ],
   "activationEvents": [
     "workspaceContains:**/pubspec.yaml",
     "onLanguage:dart"
@@ -21,22 +39,102 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      { "command": "flutterPubToolkit.checkUpdates", "title": "Check for Package Updates", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.updateAll", "title": "Update All Dependencies to Latest", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.pubGet", "title": "Pub Get", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.pubUpgrade", "title": "Pub Upgrade", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.buildRunnerBuild", "title": "build_runner: Build", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.buildRunnerWatch", "title": "build_runner: Watch", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.buildRunnerClean", "title": "build_runner: Clean", "category": "Flutter Pub Toolkit" },
-      { "command": "flutterPubToolkit.flutterClean", "title": "Flutter Clean + Pub Get", "category": "Flutter Pub Toolkit" }
+      {
+        "command": "flutterPubToolkit.checkUpdates",
+        "title": "Check for Package Updates",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.updateAll",
+        "title": "Update All Dependencies to Latest",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.updateAllSafe",
+        "title": "Update All Dependencies (Safe, Non-Breaking Only)",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.sortDependencies",
+        "title": "Sort Dependencies Alphabetically",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.generateAssets",
+        "title": "Generate Assets Class",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.pubGet",
+        "title": "Pub Get",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.pubUpgrade",
+        "title": "Pub Upgrade",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.pubOutdated",
+        "title": "Pub Outdated",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.buildRunnerBuild",
+        "title": "build_runner: Build",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.buildRunnerWatch",
+        "title": "build_runner: Watch",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.buildRunnerClean",
+        "title": "build_runner: Clean",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.flutterClean",
+        "title": "Flutter Clean + Pub Get",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.ignorePackage",
+        "title": "Ignore Package",
+        "category": "Flutter Pub Toolkit"
+      }
     ],
     "menus": {
       "editor/title": [
-        { "command": "flutterPubToolkit.checkUpdates", "when": "resourceFilename == pubspec.yaml", "group": "navigation" }
+        {
+          "command": "flutterPubToolkit.checkUpdates",
+          "when": "resourceFilename == pubspec.yaml",
+          "group": "navigation"
+        }
       ],
       "explorer/context": [
-        { "command": "flutterPubToolkit.pubGet", "when": "resourceFilename == pubspec.yaml", "group": "flutterPubToolkit@1" },
-        { "command": "flutterPubToolkit.buildRunnerBuild", "when": "resourceFilename == pubspec.yaml", "group": "flutterPubToolkit@2" }
+        {
+          "command": "flutterPubToolkit.pubGet",
+          "when": "resourceFilename == pubspec.yaml",
+          "group": "flutterPubToolkit@1"
+        },
+        {
+          "command": "flutterPubToolkit.buildRunnerBuild",
+          "when": "resourceFilename == pubspec.yaml",
+          "group": "flutterPubToolkit@2"
+        },
+        {
+          "command": "flutterPubToolkit.generateAssets",
+          "when": "resourceFilename == pubspec.yaml",
+          "group": "flutterPubToolkit@3"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "flutterPubToolkit.ignorePackage",
+          "when": "false"
+        }
       ]
     },
     "configuration": {
@@ -54,25 +152,60 @@
         },
         "flutterPubToolkit.severity": {
           "type": "string",
-          "enum": ["error", "warning", "information", "hint"],
+          "enum": [
+            "error",
+            "warning",
+            "information",
+            "hint"
+          ],
           "default": "warning",
           "description": "Severity used to mark outdated dependencies."
         },
         "flutterPubToolkit.ignoredPackages": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
-          "description": "Package names that should never be flagged as outdated."
+          "description": "Package names that should never be flagged as outdated or unused."
         },
         "flutterPubToolkit.useFvm": {
           "type": "boolean",
           "default": false,
           "description": "Prefix flutter/dart commands with 'fvm'."
+        },
+        "flutterPubToolkit.detectUnused": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fade out packages under `dependencies:` that are never imported in lib/, bin/ or test/."
+        },
+        "flutterPubToolkit.runPubGetAfterUpdate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically save pubspec.yaml and run `pub get` after 'Update all'."
+        },
+        "flutterPubToolkit.assetsOutput": {
+          "type": "string",
+          "default": "lib/gen/assets.dart",
+          "description": "Output file (relative to the project) for the generated assets class."
+        },
+        "flutterPubToolkit.assetsClassName": {
+          "type": "string",
+          "default": "Assets",
+          "description": "Class name for the generated assets class."
+        },
+        "flutterPubToolkit.assetsAutoGenerate": {
+          "type": "boolean",
+          "default": false,
+          "description": "Regenerate the assets class every time pubspec.yaml is saved."
         }
       }
     },
     "snippets": [
-      { "language": "dart", "path": "./snippets/dart.json" }
+      {
+        "language": "dart",
+        "path": "./snippets/dart.json"
+      }
     ]
   },
   "scripts": {
