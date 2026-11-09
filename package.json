@@ -2,7 +2,7 @@
   "name": "flutter-pub-toolkit",
   "displayName": "Flutter Pub Toolkit",
   "description": "Productivity tools for Flutter & Dart: outdated & unused package detection in pubspec.yaml, safe one-click updates, pub.dev autocomplete, assets class generator, build_runner commands and snippets.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "alzoldik",
   "author": {
     "name": "alzoldik"
@@ -60,6 +60,11 @@
         "category": "Flutter Pub Toolkit"
       },
       {
+        "command": "flutterPubToolkit.findUnused",
+        "title": "Find Unused Dependencies",
+        "category": "Flutter Pub Toolkit"
+      },
+      {
         "command": "flutterPubToolkit.generateAssets",
         "title": "Generate Assets Class",
         "category": "Flutter Pub Toolkit"
@@ -103,6 +108,11 @@
         "command": "flutterPubToolkit.ignorePackage",
         "title": "Ignore Package",
         "category": "Flutter Pub Toolkit"
+      },
+      {
+        "command": "flutterPubToolkit.showUsages",
+        "title": "Show Package Usages",
+        "category": "Flutter Pub Toolkit"
       }
     ],
     "menus": {
@@ -128,11 +138,20 @@
           "command": "flutterPubToolkit.generateAssets",
           "when": "resourceFilename == pubspec.yaml",
           "group": "flutterPubToolkit@3"
+        },
+        {
+          "command": "flutterPubToolkit.findUnused",
+          "when": "resourceFilename == pubspec.yaml",
+          "group": "flutterPubToolkit@4"
         }
       ],
       "commandPalette": [
         {
           "command": "flutterPubToolkit.ignorePackage",
+          "when": "false"
+        },
+        {
+          "command": "flutterPubToolkit.showUsages",
           "when": "false"
         }
       ]
@@ -198,6 +217,11 @@
           "type": "boolean",
           "default": false,
           "description": "Regenerate the assets class every time pubspec.yaml is saved."
+        },
+        "flutterPubToolkit.detectUnusedDevDependencies": {
+          "type": "boolean",
+          "default": true,
+          "description": "Also check `dev_dependencies` for unused packages (code generators, linters and other build tools are skipped)."
         }
       }
     },

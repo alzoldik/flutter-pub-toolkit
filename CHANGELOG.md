@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- "Find Unused Dependencies" command with multi-select removal
+- Unused detection for `dev_dependencies` (generators / lint / build tools skipped)
+- Hover shows how many files use a package, with a "Show usages" link
+- "Unused (N)" CodeLens above `dependencies:`
+
 ## 0.2.0
 - Safe (non-breaking) vs. major update quick fixes, plus "Update all (safe only)"
 - "Open changelog" quick fix

@@ -4,7 +4,7 @@ import { generateAssetsFile } from './assets';
 import { clearCache, getPackage, mapLimit, PackageInfo, searchPackages } from './pubApi';
 import { Dependency, DEPENDENCY_SECTIONS, entryLineRange, isPubspec, parseDependencies, sectionAt, sortEdits, topLevelKeys } from './pubspec';
 import { bumpConstraint, compareVersions, constraintBaseVersion, isBreaking, latestCompatible, parseVersion } from './semver';
-import { importedPackages, invalidateImports, NEVER_IMPORTED } from './unused';
+import { importedPackages, ImportIndex, invalidateImports, isToolPackage } from './unused';
 
 const DIAG_SOURCE = 'flutter-pub-toolkit';
 const OUTDATED_CODE = 'outdated';
@@ -72,7 +72,7 @@ async function checkDocument(doc: vscode.TextDocument, showSummary = false): Pro
   updateStatus();
   codeLensChanged.fire();
   let infos: (PackageInfo | undefined)[];
-  let imported: Set<string> | undefined;
+  let imported: ImportIndex | undefined;
   try {
     [infos, imported] = await Promise.all([
       mapLimit(deps, 8, (d) => getPackage(d.name)),
@@ -93,10 +93,10 @@ async function checkDocument(doc: vscode.TextDocument, showSummary = false): Pro
 
   deps.forEach((dep, i) => {
     // --- unused
-    if (imported && dep.section === 'dependencies' && !imported.has(dep.name)
-      && !NEVER_IMPORTED.has(dep.name) && !configuredAtTop.has(dep.name)) {
+    if (imported && isUnusedCandidate(dep, imported, configuredAtTop)) {
+      const where = dep.section === 'dev_dependencies' ? 'test/, tool/ or lib/' : 'lib/, bin/ or test/';
       const d = new vscode.Diagnostic(dep.nameRange,
-        `"${dep.name}" is not imported anywhere in lib/, bin/ or test/. It may be unused.`,
+        `"${dep.name}" is not imported anywhere in ${where}. It may be unused.`,
         vscode.DiagnosticSeverity.Hint);
       d.source = DIAG_SOURCE;
       d.code = UNUSED_CODE;
@@ -156,6 +156,41 @@ async function checkDocument(doc: vscode.TextDocument, showSummary = false): Pro
       await updateAll(doc, action === 'Update Safe Only');
     }
   }
+}
+
+function isUnusedCandidate(dep: Dependency, imported: ImportIndex, configuredAtTop: Set<string>): boolean {
+  if (dep.section === 'dependency_overrides') { return false; }
+  if (dep.section === 'dev_dependencies' && !config().get<boolean>('detectUnusedDevDependencies')) { return false; }
+  return !imported.has(dep.name) && !isToolPackage(dep.name, dep.section) && !configuredAtTop.has(dep.name);
+}
+
+/** Lists unused packages in a multi-select picker and removes the chosen ones. */
+async function findUnused(doc: vscode.TextDocument): Promise<void> {
+  invalidateImports();
+  await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Scanning imports…' }, () => checkDocument(doc));
+  const r = results.get(doc.uri.toString());
+  if (!r || !r.unused.length) {
+    vscode.window.showInformationMessage('No unused dependencies found. Every package is imported somewhere. 🎉');
+    return;
+  }
+  const picks = await vscode.window.showQuickPick(
+    r.unused.map((dep) => ({
+      label: dep.name,
+      description: `${dep.constraint}  ·  ${dep.section}`,
+      detail: 'Not imported in any Dart file of this project',
+      picked: dep.section === 'dependencies',
+      dep,
+    })),
+    { canPickMany: true, title: `${r.unused.length} possibly unused dependencies`, placeHolder: 'Select the packages to remove from pubspec.yaml' },
+  );
+  if (!picks?.length) { return; }
+  const edit = new vscode.WorkspaceEdit();
+  // delete bottom-up so line ranges stay valid
+  for (const p of [...picks].sort((a, b) => b.dep.nameRange.start.line - a.dep.nameRange.start.line)) {
+    edit.delete(doc.uri, entryLineRange(doc, p.dep.nameRange.start.line));
+  }
+  await vscode.workspace.applyEdit(edit);
+  await afterUpdate(doc, `Removed ${picks.length} unused ${picks.length === 1 ? 'dependency' : 'dependencies'}.`);
 }
 
 function scheduleCheck(doc: vscode.TextDocument, delay = 800): void {
@@ -347,6 +382,9 @@ class PubspecCodeLens implements vscode.CodeLensProvider {
     } else {
       lenses.push(new vscode.CodeLens(range, { title: '$(search) Check updates', command: 'flutterPubToolkit.checkUpdates' }));
     }
+    if (r && r.unused.length) {
+      lenses.push(new vscode.CodeLens(range, { title: `$(trash) Unused (${r.unused.length})`, command: 'flutterPubToolkit.findUnused', arguments: [doc.uri] }));
+    }
     lenses.push(new vscode.CodeLens(range, { title: 'Pub get', command: 'flutterPubToolkit.pubGet', arguments: [doc.uri] }));
     lenses.push(new vscode.CodeLens(range, { title: 'Sort A→Z', command: 'flutterPubToolkit.sortDependencies' }));
     return lenses;
@@ -368,12 +406,25 @@ class PackageHover implements vscode.HoverProvider {
       return undefined;
     }
     const md = new vscode.MarkdownString();
+    md.isTrusted = { enabledCommands: ['flutterPubToolkit.showUsages'] };
+    md.supportThemeIcons = true;
     md.appendMarkdown(`**[${info.name}](https://pub.dev/packages/${info.name})**`);
     if (info.latestStable) { md.appendMarkdown(` — latest \`${info.latestStable}\``); }
     if (info.latestAny && info.latestAny !== info.latestStable) { md.appendMarkdown(` (prerelease \`${info.latestAny}\`)`); }
     md.appendMarkdown('\n\n');
     if (info.discontinued) { md.appendMarkdown('⚠️ **Discontinued**\n\n'); }
     if (info.description) { md.appendText(info.description); md.appendMarkdown('\n\n'); }
+    if (doc.uri.scheme === 'file') {
+      const files = (await importedPackages(path.dirname(doc.uri.fsPath))).get(dep.name) ?? [];
+      if (files.length) {
+        const args = encodeURIComponent(JSON.stringify([dep.name, doc.uri.toString()]));
+        md.appendMarkdown(`$(references) Used in **${files.length}** file${files.length === 1 ? '' : 's'} · [Show usages](command:flutterPubToolkit.showUsages?${args})\n\n`);
+      } else if (isToolPackage(dep.name, dep.section)) {
+        md.appendMarkdown('$(tools) Tool / generator package: not imported directly\n\n');
+      } else {
+        md.appendMarkdown('$(warning) **Not imported anywhere**: possibly unused\n\n');
+      }
+    }
     const links = [`[Changelog](https://pub.dev/packages/${info.name}/changelog)`, `[Versions](https://pub.dev/packages/${info.name}/versions)`];
     if (info.repository || info.homepage) { links.push(`[Repository](${info.repository ?? info.homepage})`); }
     md.appendMarkdown(links.join(' · '));
@@ -571,6 +622,19 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('flutterPubToolkit.sortDependencies', async (uri?: vscode.Uri) => {
       const doc = await pubspecFromArg(uri);
       if (doc) { await sortDocument(doc); }
+    }),
+    vscode.commands.registerCommand('flutterPubToolkit.findUnused', async (uri?: vscode.Uri) => {
+      const doc = await pubspecFromArg(uri);
+      if (doc) { await findUnused(doc); }
+    }),
+    vscode.commands.registerCommand('flutterPubToolkit.showUsages', async (name: string, uriText?: string) => {
+      const dir = uriText ? path.dirname(vscode.Uri.parse(uriText).fsPath) : await projectDir();
+      await vscode.commands.executeCommand('workbench.action.findInFiles', {
+        query: `package:${name}/`,
+        isRegex: false,
+        filesToInclude: dir ? `${vscode.workspace.asRelativePath(dir)}/**/*.dart` : '**/*.dart',
+        triggerSearch: true,
+      });
     }),
     vscode.commands.registerCommand('flutterPubToolkit.ignorePackage', async (name: string) => {
       const list = config().get<string[]>('ignoredPackages') ?? [];

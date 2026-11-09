@@ -19,8 +19,15 @@ Keeps your caret / exact / quoted style. *Update all* and *Update all (safe only
 the CodeLens above `dependencies:` and the command palette.
 
 ### Unused dependency detection
-Packages under `dependencies:` that are never imported in `lib/`, `bin/` or `test/` are faded out, with quick fixes
-to **remove** or **ignore** them. Tool packages such as `cupertino_icons`, `flutter_native_splash` and `flutter_launcher_icons` are skipped.
+Packages in `dependencies:` and `dev_dependencies:` that are never imported (`package:<name>/`) in `lib/`, `bin/`, `test/`,
+`integration_test/` or `tool/` are faded out, with quick fixes to **remove** or **ignore** them.
+
+- **Find Unused Dependencies**: lists all unused packages in a multi-select picker and removes the ones you choose in one go
+  (also available from the **Unused (N)** CodeLens and the pubspec right-click menu).
+- **Hover** any dependency to see **"Used in N files · Show usages"**, which opens a search for its imports.
+- Tool packages (`cupertino_icons`, `flutter_lints`, `flutter_native_splash`, `flutter_launcher_icons`…), code generators
+  (`build_runner`, `freezed`, `json_serializable`, `*_generator`, `*_builder`…) and packages configured with a top-level
+  pubspec key are skipped automatically.
 
 ### CodeLens & status bar
 Above `dependencies:`: **Update all (N) · Update safe only · Pub get · Sort A→Z**.
@@ -52,6 +59,7 @@ Command Palette → **Flutter Pub Toolkit**:
 - Check for Package Updates
 - Update All Dependencies to Latest
 - Update All Dependencies (Safe, Non-Breaking Only)
+- Find Unused Dependencies
 - Sort Dependencies Alphabetically
 - Generate Assets Class
 - Pub Get / Pub Upgrade / Pub Outdated
@@ -79,6 +87,7 @@ Automatically uses `flutter` or `dart` depending on the project, and supports FV
 | `flutterPubToolkit.severity` | `warning` | Severity for outdated packages |
 | `flutterPubToolkit.ignoredPackages` | `[]` | Packages never flagged (outdated or unused) |
 | `flutterPubToolkit.detectUnused` | `true` | Fade out unused dependencies |
+| `flutterPubToolkit.detectUnusedDevDependencies` | `true` | Also check `dev_dependencies` |
 | `flutterPubToolkit.runPubGetAfterUpdate` | `false` | Save and run `pub get` after *Update all* |
 | `flutterPubToolkit.assetsOutput` | `lib/gen/assets.dart` | Output of the assets generator |
 | `flutterPubToolkit.assetsClassName` | `Assets` | Generated class name |
