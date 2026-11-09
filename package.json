@@ -11,7 +11,7 @@
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_GITHUB/flutter-pub-toolkit"
+    "url": "https://github.com/alzoldik/flutter-pub-toolkit"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -244,5 +244,9 @@
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.2.0",
     "typescript": "^5.4.0"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/alzoldik/flutter-pub-toolkit/issues"
+  },
+  "homepage": "https://github.com/alzoldik/flutter-pub-toolkit#readme"
 }
